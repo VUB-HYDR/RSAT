@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Documentation: RSAT_0.2.0_usermanual.pdf
-Written in python 3.7 by Annabel Vaessens, Gert Ghysels and Ferdinand Guggeis
+For analysis of rising head slug tests
+Documentation: RSAT_0.2.2_usermanual.pdf
+Written in python 3.7 by Annabel Vaessens and Gert Ghysels 
 January 2020
 #"""
 
@@ -20,20 +21,20 @@ import tkinter as tk
 class Program:    
     def newDirectory(self): #changes the directory: this will be the map that opens when opening and saving files
         self.newDirectory= tk.filedialog.askdirectory()
-        tk.Label(GUI, text=self.newDirectory[-35:],font=("Helvetica", "8"), width='32', foreground='navy').grid(row=i-5, column=j, sticky='W')
+        tk.Label(GUI, text=self.newDirectory[-35:],font=("Helvetica", "8"), width='32', foreground='navy').grid(row=i-5, column=j)
         os.chdir(self.newDirectory)
             
     def OpenFile(self): # opens file where the horizontal hydraulic conductivity calculations are performed on
         self.ListNamesCols=[]
         filenameDir=tk.filedialog.askopenfilename(filetypes = [("DAT files","*.dat"),("All Files","*")])
-        self.RAWDATA=pd.read_csv(filenameDir,decimal=',',delim_whitespace=True,header=None, names=['Time [s]','Transducer [V]','Head [ft]','Head [mm]','Pressure [mbar]']) 
+        self.RAWDATA=pd.read_csv(filenameDir,decimal=',',delim_whitespace=True,header=None, names=['Time [T]','Transducer [(M*L²)/(T³*I)]','Head [L, non SI]','Head [L]','Pressure [M/(T²*L)]']) 
         try:
             self.dfRAWDATA=pd.DataFrame(self.RAWDATA.astype(float))
         except ValueError:
             tk.messagebox.showerror("Warning", "The input file contains characters, which cannot be converted to float (literals or wrong/mixed decimal seperators) \nOnly '.' OR ',' are allowed as seperator!")
         self.filename=str(filenameDir.split('/')[-1]) # gives the file name you have selected
-        self.ListNamesCols=['Time [s]', self.filename]
-        tk.Label(GUI, text=self.filename,font=("Helvetica", "9"), foreground='navy').grid(row=i-3, column=j, sticky='W')
+        self.ListNamesCols=['Time [T]', self.filename]
+        tk.Label(GUI, text=self.filename,font=("Helvetica", "9"), foreground='navy').grid(row=i-3, column=j)
         
     def SaveFig(self): # to save figures that are created
         NameFig=tk.filedialog.asksaveasfilename(title= 'Save as', confirmoverwrite=True, initialdir=self.newDirectory)
@@ -45,15 +46,15 @@ class Program:
         canvas.get_tk_widget().grid(row=r, column=c)
         
     def PlotDataSeperateBox(self): # plots the imported data in a pop-up window
-        box = tk.Toplevel(background='snow', cursor='crosshair')
+        box = tk.Toplevel(background='#B4D0E9', cursor='crosshair')
         box.title("Data "+ self.filename )
-        FigRawData = plt.figure(figsize=(13,8),facecolor='snow')
+        FigRawData = plt.figure(figsize=(13,8),facecolor='#B4D0E9')
         plt.title(self.filename, fontsize=16)
         ax1 = FigRawData.add_subplot(111)
            
-        self.dfRAWDATA.plot(x='Time [s]', y='Head [mm]',ax=ax1)
-        plt.ylabel('Head [mm]', fontsize=14)
-        plt.xlabel('Time [s]', fontsize=14)
+        self.dfRAWDATA.plot(x='Time [T]', y='Head [L]',ax=ax1)
+        plt.ylabel('Head [L]', fontsize=14)
+        plt.xlabel('Time [T]', fontsize=14)
         plt.axis([self.dfRAWDATA.iloc[0,0]-len(self.dfRAWDATA)/60,self.dfRAWDATA.iloc[-1,0]+len(self.dfRAWDATA)/60,min(self.dfRAWDATA.iloc[:,3])-20,max(self.dfRAWDATA.iloc[:,3])+20])
         
         self.Canvas(FigRawData,box, 0,0)
@@ -89,7 +90,7 @@ class Program:
             RAWDATASliced.to_csv(self.filename[:-4]+'_proc'+self.RepeatMeas[int(x/4)]+'.dat', header=False, index=False, sep=' ') 
             x=x+4
             y=y+4
-        tk.messagebox.showinfo('Info', 'Splitting in individual measurements was successful. You can find the individual measurements in the current working directory.')
+        tk.messagebox.showinfo('Info', 'Splitting in individual measurements was successful. You can find them in the current working directory.')
     
     # function that opens multiple (or one) individual measurements, let the user define location of the baselevel and splits the data (from the minimum head to the recovered head or end of the data)
     def RepeatabilityOpen(self):
@@ -103,24 +104,24 @@ class Program:
             filenameDirList=list(filenameDir)  
             self.DFSlicedNormHead_Rep=pd.DataFrame()
             while self.Q < len(filenameDirList):
-                self.DATA=pd.read_csv(filenameDirList[self.Q],decimal=',',delim_whitespace=True,header=None, names=['Time [s]','Transducer [V]','Head [ft]','Head [mm]','Pressure [mbar]'])
+                self.DATA=pd.read_csv(filenameDirList[self.Q],decimal=',',delim_whitespace=True,header=None, names=['Time [T]','Transducer [(M*L²)/(T³*I)]','Head [L, non SI]','Head [L]','Pressure [M/(T²*L)]'])
                 self.dfDATA=pd.DataFrame(self.DATA.astype(float))
                 filenameRepeat=str((filenameDir[self.Q].split('/')[-1]).split('.')[0])
                 self.listNamesRepMeas_H.append(filenameRepeat)
                 self.listNamesRepMeas_TH.append('Time_'+filenameRepeat)
                 self.listNamesRepMeas_TH.append(filenameRepeat)
-                tk.Label(GUI, text=filenameRepeat,font=("Helvetica", "9"), foreground='navy').grid(row=i+7+self.Q, column=j+1)
+                tk.Label(GUI, text=filenameRepeat,font=("Helvetica", "9"), foreground='navy').grid(row=i+8+self.Q, column=j+1, columnspan=2, sticky='W')
                 
                 #open a new pop-up window
-                box2 = tk.Toplevel(background='snow', cursor='crosshair')
+                box2 = tk.Toplevel(background='#B4D0E9', cursor='crosshair')
                 box2.title("Data "+ filenameRepeat+ '  -- Indicate the last baselevel value')
-                FigRepBaselvl = plt.figure(figsize=(13,8),facecolor='snow')
+                FigRepBaselvl = plt.figure(figsize=(13,8),facecolor='#B4D0E9')
                 plt.title('Indicate the last baselevel value', fontsize=16)
                 ax2 =  FigRepBaselvl.add_subplot(111)
                                     
-                self.dfDATA.plot(x='Time [s]', y='Head [mm]',ax=ax2) 
-                plt.xlabel('Time [s]', fontsize=14)
-                plt.ylabel('Head [mm]', fontsize=14)
+                self.dfDATA.plot(x='Time [T]', y='Head [L]',ax=ax2) 
+                plt.xlabel('Time [T]', fontsize=14)
+                plt.ylabel('Head [L]', fontsize=14)
             
                 self.Canvas(FigRepBaselvl, box2, 0,0)
             
@@ -147,7 +148,7 @@ class Program:
         IndexMinDistBaseLevel=DistBaseLevel.index(MinDistBaseLevel)
         BaseLevel=np.mean(self.dfDATA.iloc[IndexMinDistBaseLevel-10:IndexMinDistBaseLevel,3]) # baselevel is average of ten points before the clicked point
         MinHead2=min(self.dfDATA.iloc[:,3])
-        IndexMin2=self.dfDATA['Head [mm]'].idxmin()
+        IndexMin2=self.dfDATA['Head [L]'].idxmin()
         k=IndexMin2
         while (self.dfDATA.iloc[k,3]<= BaseLevel) and (self.dfDATA.iloc[k,3] < self.dfDATA.iloc[-1,3]):
             k=k+1
@@ -163,15 +164,15 @@ class Program:
     # general settings to plot the normalized head vs time curves in a pop-up window
     # used in PlotNormHead_Time() and PlotNormHead_LogTime()
     def Multi_plot(self, title,label,xscale): 
-        box3 = tk.Toplevel(background='snow')
+        box3 = tk.Toplevel(background='#B4D0E9')
         box3.title( title +" "+", ".join(str(x) for x in self.listNamesRepMeas_H))
             
-        RepFig = plt.figure(figsize=(13,8),facecolor='snow') # RepFig stands for 'Repeated measurements figures'
+        RepFig = plt.figure(figsize=(13,8),facecolor='#B4D0E9') # RepFig stands for 'Repeated measurements figures'
         plt.title(label, fontsize=16)
         ax4 = RepFig.add_subplot(111)
         ax4.set(xscale = xscale )
-        plt.xlabel(xscale +' Time [s]', fontsize=14)
-        plt.ylabel('Normalized Head [-]', fontsize=14)
+        plt.xlabel('Time [T]', fontsize=14)
+        plt.ylabel('Normalized head [-]', fontsize=14)
         
         i=0
         for i in range(0, len(self.listNamesRepMeas_TH)-1,2):       
@@ -185,14 +186,14 @@ class Program:
         tk.Button(box3, text="Close", command=box3.destroy, width=10).grid(row=3,column=2)
     
     def PlotNormHead_Time(self): # specific settings for the normalized head vs time curves
-        title = 'Normalized Head versus Time of measurements'
-        label = 'Normalized Head versus Time'
+        title = 'Normalized head versus time for'
+        label = 'Normalized Head versus time'
         xscale='linear'
         self.Multi_plot(title,label,xscale)
         
     def PlotNormHead_LogTime(self): # specific settings for the normalized head vs log(time) curves
-        title = 'Normalized Head versus time (logscale) of measurements'
-        label = 'Plot Normalized Head versus Log Time'
+        title = 'Normalized head versus time on semilog diagram for'
+        label = 'Plot normalized nead versus time on semilog diagram'
         xscale='log'
         self.Multi_plot(title,label,xscale)
     
@@ -204,47 +205,39 @@ class Program:
             coeff=6
         A = 1.4720 + 0.03537*(self.Le/(self.rw*math.sqrt(self.Aniso)))-0.00008148*(self.Le/(self.rw*math.sqrt(self.Aniso)))**2+0.0000001028*(self.Le/(self.rw*math.sqrt(self.Aniso)))**3-0.00000000006484*(self.Le/(self.rw*math.sqrt(self.Aniso)))**4+0.00000000000001573*(self.Le/(self.rw*math.sqrt(self.Aniso)))**5
         B = 0.2372 + 0.005151*(self.Le/(self.rw*math.sqrt(self.Aniso))) - 0.000002682*(self.Le/(self.rw*math.sqrt(self.Aniso)))**2 - 0.0000000003491*(self.Le/(self.rw*math.sqrt(self.Aniso)))**3 + 0.0000000000004738*(self.Le/(self.rw*math.sqrt(self.Aniso)))**4
-        self.Kh_BR_PP_cms=self.rc*self.rc*(1.1/math.log((self.d+self.Le)/(self.rw*math.sqrt(self.Aniso)))+((A+(B*coeff))/self.Le*self.rw*math.sqrt(self.Aniso)))**(-1)/(2*self.Le*self.T01)/10 # /10 to go from mm/s to cm/s
-        self.Kh_BR_PP_cms=round(self.Kh_BR_PP_cms,5) # rounding off to five decimals
-        self.Kh_BR_PP_md=self.Kh_BR_PP_cms*864
-        self.Kh_BR_PP_md=round(self.Kh_BR_PP_md, 5)
+        self.Kh_BR_PP=self.rc*self.rc*(1.1/math.log((self.d+self.Le)/(self.rw*math.sqrt(self.Aniso)))+((A+(B*coeff))/self.Le*self.rw*math.sqrt(self.Aniso)))**(-1)/(2*self.Le*self.T01)
+        self.Kh_BR_PP=round(self.Kh_BR_PP,5) # rounding off to five decimals
     
     # Bouwer-Rice calculations for unconfined aquifer, fully penetrating well, used in PerformCalc()    
     def KhBouwerRice_FP(self): 
         C=0.7920+0.03993*(self.Le/(self.rw*math.sqrt(self.Aniso)))-0.00005743*(self.Le/(self.rw*math.sqrt(self.Aniso)))**2+0.00000003858*(self.Le/(self.rw*math.sqrt(self.Aniso)))**3-0.000000000009659*(self.Le/(self.rw*math.sqrt(self.Aniso)))**4
-        self.Kh_BR_FP_cms=self.rc*self.rc*(1.1/math.log((self.d+self.Le)/(self.rw*math.sqrt(self.Aniso)))+(C/self.Le*self.rw*math.sqrt(self.Aniso)))**(-1)/(2*self.Le*self.T01)/10
-        self.Kh_BR_FP_cms=round(self.Kh_BR_FP_cms,5 )
-        self.Kh_BR_FP_md=self.Kh_BR_FP_cms*864
-        self.Kh_BR_FP_md=round(self.Kh_BR_FP_md,5)
-        
+        self.Kh_BR_FP=self.rc*self.rc*(1.1/math.log((self.d+self.Le)/(self.rw*math.sqrt(self.Aniso)))+(C/self.Le*self.rw*math.sqrt(self.Aniso)))**(-1)/(2*self.Le*self.T01)
+        self.Kh_BR_FP=round(self.Kh_BR_FP,5 )
+
     # Hvorslev calculations for confined aquifer, partially penetrating well    
     def KhHvorslev_PP(self): 
         F=1/(2*math.sqrt(self.Aniso)/(self.Le/self.rw)) + math.sqrt(1 + (1/(2*math.sqrt(self.Aniso)/(self.Le/self.rw)))**2)
-        self.Kh_H_PP_cms = (self.rc*self.rc*math.log(F)) / (2*self.Le*self.T01)/10
-        self.Kh_H_PP_cms=round(self.Kh_H_PP_cms,5)
-        self.Kh_H_PP_md = self.Kh_H_PP_cms * 864
-        self.Kh_H_PP_md=round(self.Kh_H_PP_md,5)
+        self.Kh_H_PP = (self.rc*self.rc*math.log(F)) / (2*self.Le*self.T01)
+        self.Kh_H_PP=round(self.Kh_H_PP,5)
         
     # Hvorslev calculations for confined aquifer, fully penetrating well
     def KhHvorslev_FP(self): 
-        self.Kh_H_FP_cms=(self.rc*self.rc*math.log(self.re/self.rw))/(2*self.AqThick*self.T01)/10
-        self.Kh_H_FP_cms=round(self.Kh_H_FP_cms,5)
-        self.Kh_H_FP_md=self.Kh_H_FP_cms*864
-        self.Kh_H_FP_md=round(self.Kh_H_FP_md,5)
+        self.Kh_H_FP=(self.rc*self.rc*math.log(self.re/self.rw))/(2*self.AqThick*self.T01)
+        self.Kh_H_FP=round(self.Kh_H_FP,5)
         
     # pop-up window for the user to define the baselevel
     # used in PerformCalc()
     def DefBaseLevel(self):
-        box4 = tk.Toplevel(background='snow', cursor='crosshair')
+        box4 = tk.Toplevel(background='#B4D0E9', cursor='crosshair')
         box4.title("Data "+ self.filename + '  -- Indicate the last baselevel value')
      
-        FigBaselvl = plt.figure(figsize=(13,8),facecolor='snow')
+        FigBaselvl = plt.figure(figsize=(13,8),facecolor='#B4D0E9')
         plt.title('Indicate the last baselevel value '+ self.filename, fontsize=16)
         ax5 = FigBaselvl.add_subplot(111)
                                 
-        self.dfRAWDATA.plot(x='Time [s]', y='Head [mm]',ax=ax5)
-        plt.xlabel('Time [s]', fontsize=14)
-        plt.ylabel('Head [mm]', fontsize=14)
+        self.dfRAWDATA.plot(x='Time [T]', y='Head [L]',ax=ax5)
+        plt.xlabel('Time [T]', fontsize=14)
+        plt.ylabel('Head [L]', fontsize=14)
     
         self.Canvas(FigBaselvl, box4,0,0)
         
@@ -339,14 +332,14 @@ class Program:
     # pop-up window with the regression results
     # used in PerformCalc()    
     def PlotRegResults(self): 
-        box5 = tk.Toplevel(background='snow')
+        box5 = tk.Toplevel(background='#B4D0E9')
         box5.title("Regression results for "+ self.filename)
         
-        self.PlotRegRes = plt.figure(figsize=(7,7),facecolor='snow')
+        self.PlotRegRes = plt.figure(figsize=(7,7),facecolor='#B4D0E9')
         plt.title("Regression results for "+ self.filename, fontsize=16)
         self.ax3= plt.subplot(111)
-        plt.ylabel('Normalized Head [mm]', fontsize=14)
-        plt.xlabel('Time [s]', fontsize=14)
+        plt.ylabel('Normalized Head [L]', fontsize=14)
+        plt.xlabel('Time [T]', fontsize=14)
         self.DFSlicedNormHead_All.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1], ax=self.ax3, logy=True,color='c')
     
         self.Canvas(self.PlotRegRes, box5,0,0)
@@ -354,12 +347,12 @@ class Program:
     # shows a pop up window with a table with the calculated hydraulic conductivity values
     # used in PerformCalc()    
     def TableResults(self):  
-        box6 = tk.Toplevel(background='snow')
-        box6.title("Horizontal hydraulic conductivity results for "+ self.filename)
-        tk.Label(box6,text='Horizontal hydraulic conductivity results for ' + self.filename, background='snow',font=("Helvetica", "14")).grid(row=0, column=1)
-        tk.Label(box6, text=' ', width=10, background='snow').grid(row=0, column=0)
+        box6 = tk.Toplevel(background='#B4D0E9')
+        box6.title('Horizontal hydraulic conductivity [L/T] of '+ self.filename+'.')
+        tk.Label(box6,text='Horizontal hydraulic conductivity [L/T] of ' + self.filename +'.', background='#B4D0E9',font=("Helvetica", "14")).grid(row=0, column=1)
+        tk.Label(box6, text=' ', width=10, background='#2A6496').grid(row=0, column=0)
         
-        TableResults= plt.figure(figsize=(16,5),facecolor='snow')
+        TableResults= plt.figure(figsize=(16,5),facecolor='#B4D0E9')
         plt.subplot(111)
         cell_text = []
         for row in range(len(self.ResultsK)):
@@ -377,16 +370,15 @@ class Program:
         try:
             self.LinearReg_Coeff=[]
             self.Aniso=float(ANISO.get())
-            self.d=float(D.get())*10
-            self.Le=float(LE.get())*10
-            self.rc=float(RC.get())*10
-            self.rw=float(RW.get())*10
+            self.d=float(D.get())
+            self.Le=float(LE.get())
+            self.rc=float(RC.get())
+            self.rw=float(RW.get())
             LegendList=['Measurements']
             self.DefBaseLevel()
             self.SplitProcDataForCalc()
             # making results dataframe for hydraulic conductivities
-            iterables=[['Best range','No full recovery','All data'],['[cm/s]','[m/d]']]
-            index = pd.MultiIndex.from_product(iterables)
+            index=['Best range','No full recovery','All data']
             self.ResultsK=pd.DataFrame(np.nan,index=index,columns=['Bouwer-Rice, fully p.','Bouwer-Rice, partially p.','Hvorslev, fully p.','Hvorslev, partially p.'])
             # making results dataframe for H0 and T0
             iterables2=[['Best range','No full recovery','All data'],['H0+','T0+']]
@@ -399,32 +391,29 @@ class Program:
                 self.ResultsH0T0.iloc[0,0]=self.H01
                 self.ResultsH0T0.iloc[1,0]=self.T01
                 self.KhBouwerRice_FP()
-                self.ResultsK.iloc[0,0]=self.Kh_BR_FP_cms
-                self.ResultsK.iloc[1,0]=self.Kh_BR_FP_md
+                self.ResultsK.iloc[0,0]=self.Kh_BR_FP
                 self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='g')
                 LegendList.append('Bouwer-Rice - range 0.20-0.30')
             if V4.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
+                self.AqThick=float(AQTHICK.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_RangeBR)
                 self.ResultsH0T0.iloc[0,1]=self.H01
                 self.ResultsH0T0.iloc[1,1]=self.T01
                 self.KhBouwerRice_PP()
-                self.ResultsK.iloc[0,1]=round(self.Kh_BR_PP_cms, 5)
-                self.ResultsK.iloc[1,1]=round(self.Kh_BR_PP_md,5)
+                self.ResultsK.iloc[0,1]=round(self.Kh_BR_PP, 5)
                 if V1.get()== False:
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='g')
                     LegendList.append('Bouwer-Rice - range 0.20-0.30')
                     
             if V7.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
-                self.re=float(RE.get())*10
+                self.AqThick=float(AQTHICK.get())
+                self.re=float(RE.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_RangeH)
                 self.LinearReg_Coeff.append(self.LinRegCoef[:])
                 self.ResultsH0T0.iloc[0,2]=self.H01
                 self.ResultsH0T0.iloc[1,2]=self.T01
                 self.KhHvorslev_FP()
-                self.ResultsK.iloc[0,2]=self.Kh_H_FP_cms
-                self.ResultsK.iloc[1,2]=self.Kh_H_FP_md
+                self.ResultsK.iloc[0,2]=self.Kh_H_FP
                 self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='b')
                 LegendList.append('Hvorslev - range 0.15-0.25')
             if V10.get()==True:
@@ -433,8 +422,7 @@ class Program:
                 self.ResultsH0T0.iloc[0,3]=self.H01
                 self.ResultsH0T0.iloc[1,3]=self.T01
                 self.KhHvorslev_PP()
-                self.ResultsK.iloc[0,3]=self.Kh_H_PP_cms
-                self.ResultsK.iloc[1,3]=self.Kh_H_PP_md
+                self.ResultsK.iloc[0,3]=self.Kh_H_PP
                 if V7.get()== False:
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='b')
                     LegendList.append('Hvorslev - range 0.15-0.25')
@@ -446,30 +434,27 @@ class Program:
                 self.ResultsH0T0.iloc[2,0]=self.H01
                 self.ResultsH0T0.iloc[3,0]=self.T01
                 self.KhBouwerRice_FP()
-                self.ResultsK.iloc[2,0]=self.Kh_BR_FP_cms
-                self.ResultsK.iloc[3,0]=self.Kh_BR_FP_md  
+                self.ResultsK.iloc[1,0]=self.Kh_BR_FP  
                 self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='y')
                 LegendList.append('Range 0.3-1')
             if V5.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
+                self.AqThick=float(AQTHICK.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_Begin)
                 self.ResultsH0T0.iloc[2,1]=self.H01
                 self.ResultsH0T0.iloc[3,1]=self.T01
                 self.KhBouwerRice_PP()
-                self.ResultsK.iloc[2,1]=self.Kh_BR_PP_cms
-                self.ResultsK.iloc[3,1]=self.Kh_BR_PP_md
+                self.ResultsK.iloc[1,1]=self.Kh_BR_PP
                 if V2.get()== False:
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='y')
                     LegendList.append('Range 0.30-1')
             if V8.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
-                self.re=float(RE.get())*10
+                self.AqThick=float(AQTHICK.get())
+                self.re=float(RE.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_Begin)
                 self.ResultsH0T0.iloc[2,2]=self.H01
                 self.ResultsH0T0.iloc[3,2]=self.T01
                 self.KhHvorslev_FP()
-                self.ResultsK.iloc[2,2]=self.Kh_H_FP_cms
-                self.ResultsK.iloc[3,2]=self.Kh_H_FP_md
+                self.ResultsK.iloc[1,2]=self.Kh_H_FP
                 if (V2.get()== False) & (V5.get()== False):
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='y')
                     LegendList.append('Range 0.3-1')
@@ -478,8 +463,7 @@ class Program:
                 self.ResultsH0T0.iloc[2,3]=self.H01
                 self.ResultsH0T0.iloc[3,3]=self.T01
                 self.KhHvorslev_PP()
-                self.ResultsK.iloc[2,3]=self.Kh_H_PP_cms
-                self.ResultsK.iloc[3,3]=self.Kh_H_PP_md
+                self.ResultsK.iloc[1,3]=self.Kh_H_PP
                 if (V2.get()== False) & (V8.get()== False)& (V5.get()== False):
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='y')
                     LegendList.append('Range 0.3-1') 
@@ -490,30 +474,27 @@ class Program:
                 self.ResultsH0T0.iloc[4,0]=self.H01
                 self.ResultsH0T0.iloc[5,0]=self.T01
                 self.KhBouwerRice_FP()
-                self.ResultsK.iloc[4,0]=self.Kh_BR_FP_cms
-                self.ResultsK.iloc[5,0]=self.Kh_BR_FP_md
+                self.ResultsK.iloc[2,0]=self.Kh_BR_FP
                 self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='m')
                 LegendList.append('All data')
             if V6.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
+                self.AqThick=float(AQTHICK.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_All)
                 self.ResultsH0T0.iloc[4,1]=self.H01
                 self.ResultsH0T0.iloc[5,1]=self.T01
                 self.KhBouwerRice_PP()
-                self.ResultsK.iloc[4,1]=self.Kh_BR_PP_cms
-                self.ResultsK.iloc[5,1]=self.Kh_BR_PP_md
+                self.ResultsK.iloc[2,1]=self.Kh_BR_PP
                 if V3.get()== False:
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='m')
                     LegendList.append('All data')
             if V9.get()==True:
-                self.AqThick=float(AQTHICK.get())*1000
-                self.re=float(RE.get())*10
+                self.AqThick=float(AQTHICK.get())
+                self.re=float(RE.get())
                 self.LinearRegression(self.DFSlicedLogNormHead_All)
                 self.ResultsH0T0.iloc[4,2]=self.H01
                 self.ResultsH0T0.iloc[5,2]=self.T01
                 self.KhHvorslev_FP()
-                self.ResultsK.iloc[4,2]=self.Kh_H_FP_cms
-                self.ResultsK.iloc[5,2]=self.Kh_H_FP_md
+                self.ResultsK.iloc[2,2]=self.Kh_H_FP
                 if (V3.get()== False) & (V6.get()== False):
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='m')
                     LegendList.append('All data')
@@ -522,8 +503,7 @@ class Program:
                 self.ResultsH0T0.iloc[4,3]=self.H01
                 self.ResultsH0T0.iloc[5,3]=self.T01
                 self.KhHvorslev_PP()
-                self.ResultsK.iloc[4,3]=self.Kh_H_PP_cms
-                self.ResultsK.iloc[5,3]=self.Kh_H_PP_md
+                self.ResultsK.iloc[2,3]=self.Kh_H_PP
                 if (V3.get()== False) & (V6.get()== False)& (V9.get()== False):
                     self.dfFit.plot(x=self.ListNamesCols[0], y=self.ListNamesCols[1],ax=self.ax3, logy=True, linestyle='dashed', color='m')
                     LegendList.append('All data')
@@ -538,58 +518,61 @@ class Program:
     
     # save the hydraulic conductivity, H0 and T0 results in a text file and the regression figure as pdf
     def SaveResults(self):
-        # making a text file with the results
+        # making a text file with the results and a summary of the parameters
         filenameResult=tk.filedialog.asksaveasfilename(title= 'Save as', confirmoverwrite=True, initialdir=self.newDirectory)
         logText=[]
-        logText='\n'.join(['____________________________________________________________\n', '          Logfile Slug Test Analysis Script' , '____________________________________________________________', ' ', ' '.join(['Time:',time.strftime("%a, %d %b %Y %H:%M:%S ")]), 'Working directory: '+ os.getcwd()+'\n', 'Filename: '+self.filename+'\n'])
-        logText = logText + '\nMinimal head: '+' H = ' + '%.2f'%self.MinHead + ' mm\n'
-        logText = logText + 'Equilibrium Head: '+ '%.2f'%self.BaseLevel + ' mm' + '\n' + 'Initial Displacement H0: '+ '%.2f'%self.H0 + ' mm\n\n' 
+        logText='\n'.join(['____________________________________________________________\n', '          Logfile Slug Test Analysis Script' , '____________________________________________________________', ' ','RSAT 0.2.2' ,' '.join(['Time:',time.strftime("%a, %d %b %Y %H:%M:%S ")]), 'Filename: '+self.filename+'\n', 'Units: same as observation data. \n'])
+        logText = logText + '\nMinimal head: '+ '%.2f'%self.MinHead + ' [L]\n'
+        logText = logText + 'Equilibrium Head: '+ '%.2f'%self.BaseLevel +  ' [L]\n' + 'Initial Displacement H0: '+ '%.2f'%self.H0 + ' [L]\n\n' 
         # write the parameters
-        logText= logText + '____________________________________________________________\n\n' +'         SLUG TEST CHARACTERISTICS\n'+'____________________________________________________________\n\n'+ 'Rc: '+'%.5f' % (self.rc/10)+' cm \n'+'Rw: '+'%.5f' % (self.rw/10)+' cm \n' + 'd: '+ '%.5f'%(self.d/10) + ' cm \n'+ 'Le: '+ '%.5f' %(self.Le/10)+ ' cm \n\n'
-        logText= logText +'____________________________________________________________\n\n' + '          AQUIFER CHARACTERISTICS\n'+'____________________________________________________________\n\n' + 'Aquifer thickness: '+'%.5f' % (self.AqThick/1000) + 'm\n' + 'Anisotropy ratio Kh/Kv: ' + '%.5f'%(self.Aniso) +' [-] \n\n'
+        logText= logText + '____________________________________________________________\n\n' +'         SLUG TEST CHARACTERISTICS\n'+'____________________________________________________________\n\n'+ 'Rc: '+'%.5f' % (self.rc)+' [L]\n'+'Rw: '+'%.5f' % (self.rw)+' [L]\n' + 'd: '+ '%.5f'%(self.d) + ' [L]\n'+ 'Le: '+ '%.5f' %(self.Le)+ ' [L]\n\n'
+        logText= logText +'____________________________________________________________\n\n' + '          AQUIFER CHARACTERISTICS\n'+'____________________________________________________________\n\n' + 'Aquifer thickness: '+'%.5f' % (self.AqThick) + ' [L]\n' + 'Anisotropy ratio Kh/Kv: ' + '%.5f'%(self.Aniso) +' [-] \n\n'
         #write the results for Bouwer & Rice
         if (V1.get()== True) or (V2.get()== True) or (V3.get()== True):    
             logText = logText + '____________________________________________________________\n\n' +'      BOUWER & RICE - fully penetrating \n'+'____________________________________________________________\n\n' 
         if V1.get()== True:
-            logText = logText + 'a) Calculation based on normalized head data in interval 0.20-0.30:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,0]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,0]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,0] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[1,0] + ' m/d\n\n'
+            logText = logText + 'a) Calculation based on normalized head data in interval 0.20-0.30:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,0]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,0]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,0] + ' [L/T]\n\n' 
         if V2.get()== True:
-            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,0]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,0]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,0] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[3,0] + ' m/d\n\n\n'
+            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,0]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,0]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[1,0] + ' [L/T]\n\n' 
         if V3.get()==True:
-            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,0]/10) + ' cm\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,0]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[4,0] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[5,0] + ' m/d\n\n'
+            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,0]) + ' [L]\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,0]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,0] + ' [L/T]\n\n' 
             
         if (V4.get()== True) or (V5.get()== True) or (V6.get()== True):    
             logText = logText +'____________________________________________________________\n\n' + '    BOUWER & RICE - partially penetrating \n'+'____________________________________________________________\n\n' 
         if V4.get()== True:
-            logText = logText + 'a) Calculation based on normalized head data in interval 0.20-0.30:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,1]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,1]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,1] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[1,1] + ' m/d\n\n'
+            logText = logText + 'a) Calculation based on normalized head data in interval 0.20-0.30:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,1]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,1]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,1] + ' [L/T]\n\n' 
         if V5.get()== True:
-            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,1]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,1]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,1] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[3,1] + ' m/d\n\n\n'
+            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,1]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,1]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[1,1] + ' [L/T]\n\n' 
         if V6.get()==True:
-            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,1]/10) + ' cm\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,1]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[4,1] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[5,1] + ' m/d\n\n'
+            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,1]) + ' [L]\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,1]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,1] + ' [L/T]\n\n' 
         
         if (V10.get()== True) or (V11.get()== True) or (V12.get()== True):# see above
             logText = logText +'____________________________________________________________\n\n' + 'HVORSLEV - Fully penetrating \n'+'____________________________________________________________\n\n' 
         if V10.get()== True:
-            logText = logText + 'a) Calculation based on normalized head data in interval 0.15-0.25:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,3]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,3]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,3] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[1,3] + ' m/d\n\n'
+            logText = logText + 'a) Calculation based on normalized head data in interval 0.15-0.25:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,3]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,3]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,3] + ' [L/T]\n\n'
         if V11.get()== True:
-            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,3]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,3]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,3] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[3,3] + ' m/d\n\n\n'
+            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,3]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,3]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[1,3] + ' [L/T]\n\n'
         if V12.get()==True:
-            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,3]/10) + ' cm\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,3]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[4,3] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[5,3] + ' m/d\n\n'
+            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,3]) + ' [L]\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,3]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,3] + ' [L/T]\n\n'
        
         # write the results for hvorslev-partially penetrating
         if (V7.get()== True) or (V8.get()== True) or (V9.get()== True):# see above
             logText = logText +'____________________________________________________________\n\n' + '  HVORSLEV - Partially penetrating\n'+'____________________________________________________________\n\n' 
         if V7.get()== True:
-            logText = logText + 'a) Calculation based on normalized head data in interval 0.15-0.25:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,2]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,2]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,2] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[1,2] + ' m/d\n\n'
+            logText = logText + 'a) Calculation based on normalized head data in interval 0.15-0.25:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[0,2]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[1,2]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[0,2] + ' [L/T]\n\n'
         if V8.get()== True:
-            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,2]/10) + ' cm\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,2]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,2] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[3,2] + ' m/d\n\n\n'
+            logText = logText + 'b) Calculation based on normalized head data in interval 0.3-1:\n\n' + 'H0+ = '+ '%.2f'%(self.ResultsH0T0.iloc[2,2]) + ' [L]\n' + 'T0+ = ' + '%.1f'%(self.ResultsH0T0.iloc[3,2]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[1,2] + ' [L/T]\n\n'
         if V9.get()==True:
-            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,2]/10) + ' cm\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,2]/10) + ' s\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[4,2] + ' cm/s' + ' or ' + '%.3f'%self.ResultsK.iloc[5,2] + ' m/d\n\n'
+            logText = logText + 'c) Calculation based on all head data:\n\n' + 'H0 = '+ '%.2f'%(self.ResultsH0T0.iloc[4,2]) + ' [L]\n' + 'T0 = ' + '%.1f'%(self.ResultsH0T0.iloc[5,2]) + ' [T]\n\n' + 'Kh = ' + '%.5f'%self.ResultsK.iloc[2,2] + ' [L/T]\n\n'
         
         with open(filenameResult, 'w') as output:    
             output.write(logText)
         
         # saving a pdf with the regression plots 
         self.PlotRegRes.savefig(filenameResult + '_RegressionPlot' + '.pdf', bbox_inches='tight')
+        
+        # save the results table to an excel
+        self.ResultsK.to_excel(filenameResult+ '_K.xlsx')
     
 ############################################################################### 
 ###################################### MAIN ###################################
@@ -597,154 +580,154 @@ class Program:
     
 ################ creating GUI, structure, title and refer to authors ##########
 GUI = tk.Tk()
-GUI.title('RSAT 0.2.1')
-GUI.geometry('1000x650')
+GUI.configure(background= '#15344E')
+GUI.title('RSAT 0.2.2')
+GUI.geometry('1070x650')
 i=8
 j=15 
-tk.Label(GUI, text='RSAT 0.2.1 - Rising head Slug-test Analysis Tool',font=("Helvetica", "18"), height='3').grid(row=i-8, column=j, columnspan=5)
-tk.Label(GUI, text='Working directory and data file',font=("Helvetica", "14")).grid(row=i-7, column=j, columnspan=2, sticky='W')
-tk.Label(GUI, text='Authors: Annabel Vaessens, Gert Ghysels and Ferdinand Guggeis \n License: MIT',font=("Helvetica", "8")).grid(row=i+16, column=j+3, columnspan=10, sticky='W')
-tk.Label(GUI, text=' ', width=10).grid(row=i, column=j+2)
-tk.Label(GUI, text=' ', width=10).grid(row=i, column=j-1,)
-tk.Label(GUI, text=' ', height=1).grid(row=i+4, column=j, columnspan=7)
-tk.Label(GUI, text=' ', height=1).grid(row=i-1, column=j, columnspan=7)
-tk.Label(GUI, text=' ', height=1).grid(row=i+12, column=j-1)
-tk.Label(GUI, text=' ', height=2).grid(row=i+15, column=j+3, columnspan=7)
-tk.Label(GUI, text='', width=13).grid(row=i-1, column=4+j) # set width of column 4+j to 13
+tk.Label(GUI, text='RSAT 0.2.2 - Rising head Slug test Analysis Tool',font=("Helvetica", "18"), fg='white',height='3',background='#15344E').grid(row=i-8, column=j, columnspan=7)
+tk.Label(GUI, text='Working directory & data',font=("Helvetica", "14"), fg='white',background='#15344E').grid(row=i-7, column=j, columnspan=1, sticky='W')
+tk.Label(GUI, text='Authors: Annabel Vaessens and Gert Ghysels.                                                                                   License: MIT',font=("Helvetica", "8"),fg='white', background='#15344E').grid(row=i+16, column=j+3, columnspan=10, sticky='W')
+tk.Label(GUI, text=' ', width=10,fg='white', background='#15344E').grid(row=i, column=j+2)
+tk.Label(GUI, text=' ', width=10,fg='white', background='#15344E').grid(row=i, column=j+1)
+tk.Label(GUI, text=' ', width=8, fg='white', background='#15344E').grid(row=i, column=j-1)
+tk.Label(GUI, text=' ', height=1, fg='white',  background='#15344E').grid(row=i+5, column=j, columnspan=7)
+tk.Label(GUI, text=' ', height=1, fg='white',  background='#15344E').grid(row=i-1, column=j, columnspan=7)
+tk.Label(GUI, text=' ', height=1, fg='white',  background='#15344E').grid(row=i+12, column=j-1)
+tk.Label(GUI, text=' ', height=1, fg='white',  background='#15344E').grid(row=i+15, column=j+3, columnspan=7)
+tk.Label(GUI, text='', width=13, fg='white', background='#15344E').grid(row=i-1, column=4+j) # set width of column 4+j to 13
 
 p=Program() # to make the class Program work in the main
 
 ########################## DIRECTORY AND OPEN FILE ############################
 # button to change directory
-tk.Label(GUI, text='Working directory',font=("Helvetica", "11")).grid(row=i-6, column=j, sticky='W')
-tk.Button(GUI, text="Browse", command=p.newDirectory, font=("Helvetica", "9"), bg='grey80').grid(row=i-6, column=j+1, sticky='W')
+tk.Button(GUI, text="Working directory", command=p.newDirectory, font=("Helvetica", "10",'bold'), fg='white',width=18, bg='#2A6496').grid(row=i-6, column=j)
 
-# label and button to import a file 
-tk.Label(GUI, text='Data file name',font=("Helvetica", "11")).grid(row=i-4, column=j, sticky='W')
-tk.Button(GUI, text="Browse", font=("Helvetica", "9"), command=p.OpenFile, bg='grey80').grid(row=i-4, column=j+1, sticky='W')
+# button to import a file 
+tk.Button(GUI, text="Data file", font=("Helvetica", "10",'bold'), fg='white', command=p.OpenFile,width=18, bg='#2A6496').grid(row=i-4, column=j)
 
-# button to plot a head (mm) - time (s) curve in a pop-up window
-tk.Button(GUI,text="Show data plot", command=p.PlotDataSeperateBox, font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i-2, column=j, sticky='W')
+# button to plot a head (L) - time (s) curve in a pop-up window
+tk.Button(GUI,text="Plot", command=p.PlotDataSeperateBox, font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i-2, column=j)
 
 ########################### SPLITTING RAW DATA ################################
 # an entry to enter how many measurements there are in the imported file
-tk.Label(GUI, text='Splitting raw data',font=("Helvetica", "14")).grid(row=i, column=j, columnspan=2, sticky='W')
-tk.Label(GUI, text='Number of measurements in file: ',font=("Helvetica", "9")).grid(row=i+1, column=j, sticky='W')
+tk.Label(GUI, text='Splitting raw data',fg='white', font=("Helvetica", "14"), background='#15344E').grid(row=i, column=j, columnspan=1, sticky='W')
+tk.Label(GUI, text=' # measurements: ',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i+1, column=j, sticky='W')
 NM=tk.IntVar()
-NumberMeas=tk.Entry(GUI,textvariable=NM, width=8).grid(row=i+1, column=j+1, sticky='W')
+NumberMeas=tk.Entry(GUI,textvariable=NM, width=8).grid(row=i+1, column=j, sticky='E')
 
 # button to define the boundaries of individual measurements in the clickable graph
-tk.Button(GUI, text='Define boundaries', command=p.ClickableGraph, font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i+2, column=j, sticky='W')
+tk.Button(GUI, text='Boundaries', command=p.ClickableGraph, font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i+3, column=j)
 # button to plit the data files into individual measurements
-tk.Button(GUI, text='Split data',command=p.SplitRawData, font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i+3, column=j, sticky='W')
+tk.Button(GUI, text='Split data',command=p.SplitRawData, font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i+4, column=j)
 
 ########################### CHECK REPEATABILITY ###############################
 # label and button to open multiple files in order to check repeatability on normalized head - time curves
-tk.Label(GUI,text='Plot normalized head curves', font=("Helvetica", "14")).grid(row=i+6, column=j,columnspan=2, sticky='W')        
-tk.Button(GUI, text='Choose files', command=p.RepeatabilityOpen, font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i+7, column=j, sticky='W')
+tk.Label(GUI,text='Normalized head curves',fg='white',  font=("Helvetica", "14"), background='#15344E').grid(row=i+6, column=j,columnspan=1, sticky='W')        
+tk.Button(GUI, text='Choose files', command=p.RepeatabilityOpen, font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i+8, column=j)
 
 # button to plot normhead-time curves 
-tk.Button(GUI, text='Normalized head vs time', command= p.PlotNormHead_Time ,font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i+8, column=j, sticky='W')
+tk.Button(GUI, text='Versus time - lineair', command= p.PlotNormHead_Time ,font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i+9, column=j)
 
 # button to plot normhead-log(time) curves     
-tk.Button(GUI, text='Normalized head vs log(time)', command= p.PlotNormHead_LogTime ,font=("Helvetica", "9"), width=26, bg='grey80').grid(row=i+9, column=j, sticky='W')
+tk.Button(GUI, text='Versus time - semilog', command= p.PlotNormHead_LogTime ,font=("Helvetica", "10",'bold'), fg='white', width=18, bg='#2A6496').grid(row=i+10, column=j)
 
 ###################### PARAMETERS for calculations #############################
 # aquifer characteristics entries
-tk.Label(GUI, text='Aquifer characteristics',font=("Helvetica", "14")).grid(row=i, column=3+j,columnspan=3, sticky='W')
+tk.Label(GUI, text='Aquifer characteristics',fg='white', font=("Helvetica", "14"), background='#15344E').grid(row=i, column=3+j,columnspan=3, sticky='W')
 
-tk.Label(GUI, text='Anisotropy Kh/Kv',font=("Helvetica", "10")).grid(row=i+1, column=3+j, sticky='W')
-tk.Label(GUI, text='[-]',font=("Helvetica", "10")).grid(row=i+1, column=5+j, sticky='W')
+tk.Label(GUI, text='Anisotropy Kh/Kv',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i+1, column=3+j, sticky='W')
+tk.Label(GUI, text='[-]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i+1, column=5+j, sticky='W')
 ANISO=tk.StringVar()
 tk.Entry(GUI, textvariable=ANISO, width=8).grid(row=i+1, column=4+j)
 
-tk.Label(GUI, text='Thickness of aquifer',font=("Helvetica", "10")).grid(row=i+2, column= 3+j, sticky='W')
-tk.Label(GUI, text='[m]',font=("Helvetica", "10")).grid(row=i+2, column=5+j, sticky='W')
+tk.Label(GUI, text='Thickness of aquifer',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i+2, column= 3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i+2, column=5+j, sticky='W')
 AQTHICK=tk.StringVar()
 tk.Entry(GUI, textvariable=AQTHICK, width=8).grid(row=i+2, column=4+j)
 
 # slug test characteristics entries
-tk.Label(GUI, text='Slug test characteristics',font=("Helvetica", "14")).grid(row=i-7, column=j+3,columnspan=3, sticky='W')
+tk.Label(GUI, text='Slug test characteristics',fg='white', font=("Helvetica", "14"), background='#15344E').grid(row=i-7, column=j+3,columnspan=3, sticky='W')
 
-tk.Label(GUI, text='rc - Effective radius well casing',font=("Helvetica", "10")).grid(row=i-6, column=3+j, sticky='W')
-tk.Label(GUI, text='[cm]',font=("Helvetica", "10")).grid(row=i-6, column=5+j, sticky='W')
+tk.Label(GUI, text='rc - Effective radius well casing',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-6, column=3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-6, column=5+j, sticky='W')
 RC=tk.StringVar()
 tk.Entry(GUI, textvariable=RC, width=8).grid(row=i-6, column=j+4)
 
-tk.Label(GUI, text='Le - Effective screen length',font=("Helvetica", "10")).grid(row=i-5, column=3+j, sticky='W')
-tk.Label(GUI, text='[cm]',font=("Helvetica", "10")).grid(row=i-5, column=5+j, sticky='W')
+tk.Label(GUI, text='Le - Effective screen length',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-5, column=3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-5, column=5+j, sticky='W')
 LE=tk.StringVar()
 tk.Entry(GUI, textvariable=LE, width=8).grid(row=i-5, column=j+4)
 
-tk.Label(GUI, text='rw - Effective radius well screen',font=("Helvetica", "10")).grid(row=i-4, column=3+j, sticky='W')
-tk.Label(GUI, text='[cm]',font=("Helvetica", "10")).grid(row=i-4, column=5+j, sticky='W')
+tk.Label(GUI, text='rw - Effective radius well screen',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-4, column=3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-4, column=5+j, sticky='W')
 RW=tk.StringVar()
 tk.Entry(GUI, textvariable=RW, width=8).grid(row=i-4, column=4+j)
 
-tk.Label(GUI, text='d - z-position of top of screen',font=("Helvetica", "10")).grid(row=i-3, column=3+j, sticky='W')
-tk.Label(GUI, text='[cm]',font=("Helvetica", "10")).grid(row=i-3, column=5+j, sticky='W')
+tk.Label(GUI, text='d - z-position of top of screen',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-3, column=3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-3, column=5+j, sticky='W')
 D=tk.StringVar()
 tk.Entry(GUI, textvariable=D, width=8).grid(row=i-3, column=4+j)
 
-tk.Label(GUI, text='Re - effective radius parameter',font=("Helvetica", "10")).grid(row=i-2, column=3+j, sticky='W')
-tk.Label(GUI, text='[cm]',font=("Helvetica", "10")).grid(row=i-2, column=5+j, sticky='W')
+tk.Label(GUI, text='Re - effective radius parameter',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-2, column=3+j, sticky='W')
+tk.Label(GUI, text='[L]',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=i-2, column=5+j, sticky='W')
 RE=tk.StringVar()
 tk.Entry(GUI, textvariable=RE, width=8).grid(row=i-2, column=4+j)
 
 ################# CALCULATION OPTIONS + CALCULATIONS ###########################
 # 9 check boxes for the different calculation options 
-tk.Label(GUI, text='Calculation methods',font=("Helvetica", "14")).grid(row=6+i, column=j+3, columnspan=1, sticky='W')
-tk.Button(GUI, text='Check limitations', command=p.CheckLimitations, font=("Helvetica", "10"), width=15, bg='grey80').grid(row=6+i, column=4+j, sticky='W', columnspan=3)
+tk.Label(GUI, text='Hydraulic conductivity',fg='white', font=("Helvetica", "14"), background='#15344E').grid(row=6+i, column=j+3, columnspan=1, sticky='W')
+tk.Button(GUI, text='Limitations', command=p.CheckLimitations, fg='white', font=("Helvetica", "10",'bold'),width=9, bg='#2A6496').grid(row=6+i, column=8+j, sticky='W', columnspan=3)
 
-tk.Label(GUI, text='Bouwer & Rice, fully penetrating',font=("Helvetica", "10")).grid(row=7+i, column=3+j, sticky='W')
-tk.Label(GUI, text='Best range',font=("Helvetica", "10")).grid(row=7+i, column=4+j, sticky='E')   
+tk.Label(GUI, text='Bouwer & Rice, fully penetrating',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=8+i, column=3+j, sticky='W')
+tk.Label(GUI, text='Best range',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=8+i, column=4+j, sticky='E')   
 V1=tk.IntVar()
-tk.Checkbutton(GUI, variable=V1).grid(row=7+i, column=4+j, sticky='W')
-tk.Label(GUI, text='No full recovery',font=("Helvetica", "10")).grid(row=7+i, column=6+j, sticky='W')  
+tk.Checkbutton(GUI, variable=V1, background='#15344E').grid(row=8+i, column=4+j, sticky='W')
+tk.Label(GUI, text='No full recovery',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=8+i, column=6+j, sticky='W')  
 V2=tk.IntVar() 
-tk.Checkbutton(GUI, variable=V2).grid(row=7+i, column=5+j, sticky='E')
-tk.Label(GUI, text='All data',font=("Helvetica", "10")).grid(row=7+i, column=9+j, sticky='W')   
+tk.Checkbutton(GUI, variable=V2, background='#15344E').grid(row=8+i, column=5+j, sticky='E')
+tk.Label(GUI, text='All data',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=8+i, column=9+j, sticky='W')   
 V3=tk.IntVar()
-tk.Checkbutton(GUI, variable=V3).grid(row=7+i, column=8+j, sticky='E')
+tk.Checkbutton(GUI, variable=V3, background='#15344E').grid(row=8+i, column=8+j, sticky='E')
 
-tk.Label(GUI, text='Bouwer & Rice, partially penetrating',font=("Helvetica", "10")).grid(row=8+i, column=3+j, sticky='W')
-tk.Label(GUI, text='Best range',font=("Helvetica", "10")).grid(row=8+i, column=4+j, sticky='E')  
+tk.Label(GUI, text='Bouwer & Rice, partially penetrating',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=9+i, column=3+j, sticky='W')
+tk.Label(GUI, text='Best range',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=9+i, column=4+j, sticky='E')  
 V4=tk.IntVar() 
-tk.Checkbutton(GUI, variable=V4).grid(row=8+i, column=4+j, sticky='W')
-tk.Label(GUI, text='No full recovery',font=("Helvetica", "10")).grid(row=8+i, column=6+j, sticky='W')  
+tk.Checkbutton(GUI, variable=V4, background='#15344E').grid(row=9+i, column=4+j, sticky='W')
+tk.Label(GUI, text='No full recovery',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=9+i, column=6+j, sticky='W')  
 V5=tk.IntVar()  
-tk.Checkbutton(GUI, variable=V5).grid(row=8+i, column=5+j, sticky='E')
-tk.Label(GUI, text='All data',font=("Helvetica", "10")).grid(row=8+i, column=9+j, sticky='W')   
+tk.Checkbutton(GUI, variable=V5, background='#15344E').grid(row=9+i, column=5+j, sticky='E')
+tk.Label(GUI, text='All data',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=9+i, column=9+j, sticky='W')   
 V6=tk.IntVar() 
-tk.Checkbutton(GUI, variable=V6).grid(row=8+i, column=8+j, sticky='E')
+tk.Checkbutton(GUI, variable=V6, background='#15344E').grid(row=9+i, column=8+j, sticky='E')
 
-tk.Label(GUI, text='Hvorslev, fully penetrating',font=("Helvetica", "10")).grid(row=9+i, column=3+j, sticky='W')
-tk.Label(GUI, text='Best range',font=("Helvetica", "10")).grid(row=9+i, column=4+j, sticky='E')  
+tk.Label(GUI, text='Hvorslev, fully penetrating',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=10+i, column=3+j, sticky='W')
+tk.Label(GUI, text='Best range',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=10+i, column=4+j, sticky='E')  
 V7=tk.IntVar()
-tk.Checkbutton(GUI, variable=V7).grid(row=9+i, column=4+j, sticky='W')
-tk.Label(GUI, text='No full recovery',font=("Helvetica", "10")).grid(row=9+i, column=6+j, sticky='W')   
+tk.Checkbutton(GUI, variable=V7, background='#15344E').grid(row=10+i, column=4+j, sticky='W')
+tk.Label(GUI, text='No full recovery',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=10+i, column=6+j, sticky='W')   
 V8=tk.IntVar()
-tk.Checkbutton(GUI, variable=V8).grid(row=9+i, column=5+j, sticky='E')
-tk.Label(GUI, text='All data',font=("Helvetica", "10")).grid(row=9+i, column=9+j, sticky='W') 
+tk.Checkbutton(GUI, variable=V8, background='#15344E').grid(row=10+i, column=5+j, sticky='E')
+tk.Label(GUI, text='All data',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=10+i, column=9+j, sticky='W') 
 V9=tk.IntVar()  
-tk.Checkbutton(GUI, variable=V9).grid(row=9+i, column=8+j, sticky='E')
+tk.Checkbutton(GUI, variable=V9, background='#15344E').grid(row=10+i, column=8+j, sticky='E')
 
-tk.Label(GUI, text='Hvorslev, partially penetrating',font=("Helvetica", "10")).grid(row=10+i, column=3+j, sticky='W')
-tk.Label(GUI, text='Best range',font=("Helvetica", "10")).grid(row=10+i, column=4+j, sticky='E')  
+tk.Label(GUI, text='Hvorslev, partially penetrating',fg='white', font=("Helvetica", "11"), background='#15344E').grid(row=11+i, column=3+j, sticky='W')
+tk.Label(GUI, text='Best range',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=11+i, column=4+j, sticky='E')  
 V10=tk.IntVar()
-tk.Checkbutton(GUI, variable=V10).grid(row=10+i, column=4+j, sticky='W')
-tk.Label(GUI, text='No full recovery',font=("Helvetica", "10")).grid(row=10+i, column=6+j, sticky='W')   
+tk.Checkbutton(GUI, variable=V10, background='#15344E').grid(row=11+i, column=4+j, sticky='W')
+tk.Label(GUI, text='No full recovery',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=11+i, column=6+j, sticky='W')   
 V11=tk.IntVar()
-tk.Checkbutton(GUI, variable=V11).grid(row=10+i, column=5+j, sticky='E')
-tk.Label(GUI, text='All data',font=("Helvetica", "10")).grid(row=10+i, column=9+j, sticky='W') 
+tk.Checkbutton(GUI, variable=V11, background='#15344E').grid(row=11+i, column=5+j, sticky='E')
+tk.Label(GUI, text='All data',fg='white', font=("Helvetica", "10"), background='#15344E').grid(row=11+i, column=9+j, sticky='W') 
 V12=tk.IntVar()  
-tk.Checkbutton(GUI, variable=V12).grid(row=10+i, column=8+j, sticky='E')
+tk.Checkbutton(GUI, variable=V12, background='#15344E').grid(row=11+i, column=8+j, sticky='E')
 # button to perform calculations
-tk.Button(GUI, text='Calculate Kh values', command=p.PerformCalc, font=("Helvetica", "10"), width=20, bg='grey80').grid(row=13+i, column=3+j, sticky='W', columnspan=1)
+tk.Button(GUI, text='Calculate Kh', command=p.PerformCalc, fg='white', font=("Helvetica", "10",'bold'), width=22, bg='#2A6496').grid(row=13+i, column=3+j, columnspan=1, sticky='W')
 # button to save the results    
-tk.Button(GUI, text='Save results', command=p.SaveResults, font=("Helvetica", "10"), width=20, bg='grey80').grid(row=13+i, column=3+j, sticky='E', columnspan=3)
+tk.Button(GUI, text='Save', command=p.SaveResults, fg='white', font=("Helvetica", "10",'bold'), width=21, bg='#2A6496').grid(row=13+i, column=3+j, columnspan=3, sticky='E')
 # button to close the GUI
-tk.Button(GUI, text="Close tab", command=GUI.destroy, font=("Helvetica", "10"), width=20, bg='grey80').grid(row=i+13, column=j+6, columnspan=4)
+tk.Button(GUI, text="Close", command=GUI.destroy,fg='white',  font=("Helvetica", "10",'bold'), width=21, bg='#2A6496').grid(row=i+13, column=j+6, columnspan=4)
 
 tk.mainloop( ) # keeps the GUI open
 
